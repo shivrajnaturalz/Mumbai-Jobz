@@ -1,7 +1,6 @@
 import React,{useMemo,useState} from 'react';
 import {MapPin,Search,MessageCircle,UserRound,SlidersHorizontal} from 'lucide-react';
 import {isEmployeeAvailable,getAvailabilityLabel} from '../data/jobs';
-
 const candidates=[
  {id:'C-001',name:'Amit Patil',role:'Waiter',skills:['Waiter','Hotel Service'],area:'Andheri East',salaryMin:18000,salaryMax:22000,availabilityStatus:'available',experience:'2 yrs'},
  {id:'C-002',name:'Rahul Jadhav',role:'Cook',skills:['Cook','Indian Cuisine'],area:'Powai',salaryMin:20000,salaryMax:26000,availabilityStatus:'available',experience:'4 yrs'},
@@ -9,18 +8,9 @@ const candidates=[
  {id:'C-004',name:'Vijay Shinde',role:'Machine Operator',skills:['Machine Operator','Factory'],area:'Kurla',salaryMin:22000,salaryMax:30000,availabilityStatus:'available',experience:'5 yrs'},
  {id:'C-005',name:'Ramesh Pawar',role:'Helper',skills:['Helper','Packing'],area:'Goregaon',salaryMin:16000,salaryMax:20000,availabilityStatus:'unavailable',experience:'3 yrs'}
 ];
-
 export default function FindCandidates({onApproach}){
  const [skill,setSkill]=useState('');const [area,setArea]=useState('');const [availableOnly,setAvailableOnly]=useState(true);const [approached,setApproached]=useState([]);
- const visible=useMemo(()=>candidates.filter(c=>{
-  const skillMatch=!skill||c.role.toLowerCase().includes(skill.toLowerCase())||c.skills.some(s=>s.toLowerCase().includes(skill.toLowerCase()));
-  const areaMatch=!area||c.area.toLowerCase().includes(area.toLowerCase());
-  const availabilityMatch=!availableOnly||isEmployeeAvailable(c);
-  return skillMatch&&areaMatch&&availabilityMatch;
- }),[skill,area,availableOnly]);
- const approach=(c)=>{setApproached(a=>a.includes(c.id)?a:[...a,c.id]);onApproach?.(c);};
- return <section className="findCandidates"><div className="findHeader"><div><h2>Find Candidates</h2><p>Search the local talent pool by skill, area and real availability.</p></div><div className="findTotal"><UserRound size={18}/>{visible.length} matches</div></div>
-  <div className="candidateFilters"><label><Search size={16}/><input value={skill} onChange={e=>setSkill(e.target.value)} placeholder="Skill or job"/></label><label><MapPin size={16}/><input value={area} onChange={e=>setArea(e.target.value)} placeholder="Area"/></label><button className={availableOnly?'selected':''} onClick={()=>setAvailableOnly(v=>!v)}><SlidersHorizontal size={16}/> Available only</button></div>
-  <div className="candidateResults">{visible.map(c=><article className="matchCard" key={c.id}><div className="matchAvatar">{c.name.split(' ').map(x=>x[0]).join('')}</div><div className="matchInfo"><div className="matchName"><h3>{c.name}</h3><em>{getAvailabilityLabel(c)}</em></div><p>{c.role} · {c.area}</p><small>{c.experience} · ₹{c.salaryMin.toLocaleString()}–₹{c.salaryMax.toLocaleString()}</small><div className="skillTags">{c.skills.map(s=><span key={s}>{s}</span>)}</div></div><div className="matchActions"><button><MessageCircle size={17}/> Chat</button><button disabled={approached.includes(c.id)} onClick={()=>approach(c)}>{approached.includes(c.id)?'Approached':'Approach'}</button></div></article>)}{visible.length===0&&<div className="emptyMatches">No currently available candidates match these filters.</div>}</div>
- </section>;
+ const visible=useMemo(()=>candidates.filter(c=>{const skillMatch=!skill||c.role.toLowerCase().includes(skill.toLowerCase())||c.skills.some(s=>s.toLowerCase().includes(skill.toLowerCase()));const areaMatch=!area||c.area.toLowerCase().includes(area.toLowerCase());return skillMatch&&areaMatch&&(!availableOnly||isEmployeeAvailable(c));}),[skill,area,availableOnly]);
+ const approach=c=>{setApproached(a=>a.includes(c.id)?a:[...a,c.id]);window.dispatchEvent(new CustomEvent('candidate-approached',{detail:c}));onApproach?.(c);};
+ return <section className="findCandidates"><div className="findHeader"><div><h2>Find Candidates</h2><p>Search the local talent pool by skill, area and real availability.</p></div><div className="findTotal"><UserRound size={18}/>{visible.length} matches</div></div><div className="candidateFilters"><label><Search size={16}/><input value={skill} onChange={e=>setSkill(e.target.value)} placeholder="Skill or job"/></label><label><MapPin size={16}/><input value={area} onChange={e=>setArea(e.target.value)} placeholder="Area"/></label><button className={availableOnly?'selected':''} onClick={()=>setAvailableOnly(v=>!v)}><SlidersHorizontal size={16}/> Available only</button></div><div className="candidateResults">{visible.map(c=><article className="matchCard" key={c.id}><div className="matchAvatar">{c.name.split(' ').map(x=>x[0]).join('')}</div><div className="matchInfo"><div className="matchName"><h3>{c.name}</h3><em>{getAvailabilityLabel(c)}</em></div><p>{c.role} · {c.area}</p><small>{c.experience} · ₹{c.salaryMin.toLocaleString()}–₹{c.salaryMax.toLocaleString()}</small><div className="skillTags">{c.skills.map(s=><span key={s}>{s}</span>)}</div></div><div className="matchActions"><button><MessageCircle size={17}/> Chat</button><button disabled={approached.includes(c.id)} onClick={()=>approach(c)}>{approached.includes(c.id)?'Approached':'Approach'}</button></div></article>)}{visible.length===0&&<div className="emptyMatches">No currently available candidates match these filters.</div>}</div></section>;
 }
